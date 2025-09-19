@@ -1,4 +1,4 @@
-const CACHE='ios-habit-pwa-v12';
+const CACHE='ios-habit-pwa-v15';
 const ASSETS=['./','./index.html','./manifest.webmanifest','./favicon.ico','./apple-touch-icon.png','./icon-192.png','./icon-256.png','./icon-512.png','./logo-light.png','./logo-dark.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));self.skipWaiting());});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>k===CACHE?null:caches.delete(k)))));self.clients.claim());});

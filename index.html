@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Habit Tracker</title>
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -49,8 +49,8 @@
     :root[data-theme='white-lime']{ --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#D4FF00; --border:#e5e7eb; --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08); --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#ecf7ee; --switch-off-border:#ddeee1; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06); }
 
     *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
+    html,body{ -webkit-text-size-adjust: 100%; touch-action: manipulation;height:100%}
+    body{ -webkit-text-size-adjust: 100%; touch-action: manipulation;
       margin:0;
       background: var(--bg);
       color:var(--ink);
@@ -94,8 +94,8 @@
     .chip.accent:focus-visible{ outline:3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset:2px; }
 
     .habit-header{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-    .habit-name{ font-weight:900; letter-spacing:.6px; font-size:15px; flex:1; }
-    .habit-name[contenteditable="true"]{ outline:2px dashed color-mix(in srgb, var(--ink) 30%, transparent); border-radius:8px; padding:2px 6px; }
+    .habit-name{ font-weight:900; letter-spacing:.6px; font-size:18px; flex:1; }
+    .habit-name[contenteditable="true"]{ outline:2px dashed color-mix(in srgb, var(--ink) 30%, transparent); border-radius:8px; padding:2px 6px; font-size:18px; }
     .icon{ background:transparent; border:none; color:var(--ink); cursor:pointer; padding:6px; border-radius:10px; }
 
     .row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 2px; }
@@ -108,7 +108,33 @@
 
     .empty{ text-align:center; color:var(--muted); border:1px dashed var(--border); padding:22px; border-radius:14px; }
     .hint{ text-align:center; color:var(--muted); font-size:12px; margin-top:8px; }
-  </style>
+  
+    /* ===== Habit progress bar ===== */
+    .progress{
+      position: relative;
+      width: 100%;
+      height: 10px;
+      background: var(--switch-off);
+      border: 1px solid var(--switch-off-border);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .progress__bar{
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width .25s ease;
+    }
+    .progress__label{
+      position:absolute;
+      top: -18px;
+      right: 0;
+      font-size: 11px;
+      color: var(--muted);
+      user-select:none;
+    }
+</style>
 </head>
 <body>
   <div class="app">
@@ -178,18 +204,42 @@
         edit.addEventListener('click', ()=>{
           const editing = name.getAttribute('contenteditable')==='true';
           if(!editing){ name.setAttribute('contenteditable','true'); name.focus(); document.execCommand?.('selectAll',false,null); }
-          else { name.setAttribute('contenteditable','false'); habit.name = name.textContent.trim()||'Habit'; store.write(state.habits); }
+          else { name.setAttribute('contenteditable','false'); habit.name = name.textContent.trim()||'Habit'; store.write(state.habits);
+            updateProgress(); }
         });
         name.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); name.blur(); } });
         name.addEventListener('blur', ()=>{
-          if(name.getAttribute('contenteditable')==='true'){ name.setAttribute('contenteditable','false'); habit.name = name.textContent.trim()||'Habit'; store.write(state.habits); }
+          if(name.getAttribute('contenteditable')==='true'){ name.setAttribute('contenteditable','false'); habit.name = name.textContent.trim()||'Habit'; store.write(state.habits);
+            updateProgress(); }
         });
         del.addEventListener('click', ()=>{
-          state.habits = state.habits.filter(h=>h.id!==habit.id); store.write(state.habits); render();
+          state.habits = state.habits.filter(h=>h.id!==habit.id); store.write(state.habits);
+            updateProgress(); render();
         });
 
         header.append(name, edit, del);
         card.appendChild(header);
+        // Progress bar
+        const progress = document.createElement('div'); progress.className = 'progress';
+        const bar = document.createElement('div'); bar.className = 'progress__bar';
+        const label = document.createElement('div'); label.className = 'progress__label';
+        progress.appendChild(bar);
+        progress.appendChild(label);
+        card.appendChild(progress);
+
+        function updateProgress(){
+          const done = habit.week.filter(Boolean).length;
+          const pct = Math.round((done/7)*100);
+          bar.style.width = pct + '%';
+          progress.setAttribute('role','progressbar');
+          progress.setAttribute('aria-valuemin','0');
+          progress.setAttribute('aria-valuemax','7');
+          progress.setAttribute('aria-valuenow', String(done));
+          progress.title = done + '/7 days completed';
+          label.textContent = pct + '%';
+        }
+        updateProgress();
+
 
         DAYS.forEach((d,i)=>{
           const row = document.createElement('div'); row.className='row';
@@ -202,6 +252,8 @@
             habit.week[i] = !habit.week[i];
             sw.classList.toggle('on', habit.week[i]);
             store.write(state.habits);
+            updateProgress();
+            updateProgress();
           };
           sw.addEventListener('click', toggle, {passive:true});
           knob.addEventListener('click', (e)=>{ e.stopPropagation(); toggle(); }, {passive:true});
@@ -252,16 +304,19 @@
 
     document.getElementById('add').addEventListener('click', ()=>{
       state.habits.push({ id: uid(), name:'Habit', week:[false,false,false,false,false,false,false] });
-      store.write(state.habits); render();
+      store.write(state.habits);
+            updateProgress(); render();
     });
     document.getElementById('clear').addEventListener('click', ()=>{
       state.habits = state.habits.map(h=>({ ...h, week:[false,false,false,false,false,false,false] }));
-      store.write(state.habits); render();
+      store.write(state.habits);
+            updateProgress(); render();
     });
 
     if(state.habits.length===0){
       state.habits=[{id:uid(), name:'Workout', week:[false,false,false,false,false,false,false]}];
       store.write(state.habits);
+            updateProgress();
     }
 
     render();
