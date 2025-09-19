@@ -172,7 +172,11 @@
     <div class="hint">Weekly view (Sun–Sat). Tap a switch to mark the day.</div>
   </div>
 
+  
   <script>
+    // Safe stub so outer handlers don't error; real per-card updateProgress lives inside render()
+    window.updateProgress = window.updateProgress || function(){};
+
     const DAYS = ["SUN","MON","TUES","WED","THUR","FRI","SAT"];
 
     const store = {
