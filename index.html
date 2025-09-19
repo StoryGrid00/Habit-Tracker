@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Habit Tracker</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" id="themeColorMeta" content="#0b0b0f">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    /* ===== Base defaults (dark-ish) ===== */
+    :root{
+      --bg:#0b0b0f;
+      --card:#12131a;
+      --ink:#f5f7ff;
+      --muted:#eaeaff;
+      --accent:#00e5ff;
+      --border:#1a1b23;
+      --blur-bg:rgba(18,19,26,.7);
+      --shadow:0 12px 32px rgba(0,0,0,.6);
+      --radius:18px;
+      --control-bg:#161723;
+      --control-fg:#ffffff;
+      --switch-off:#1a1d27;
+      --switch-off-border:#101219;
+      --knob:#ffffff;
+      --hover:#26293a;
+      --menu-hover:#26293a;
+    }
+
+    /* ===== Dark Neon / Cyberpunk presets ===== */
+    :root[data-theme='neon-cyan']{ --accent:#00e5ff; --bg:#030712; --card:#0a0f1f; --border:#101a2a; --control-bg:#0f172a; --switch-off:#0b1222; --switch-off-border:#08101c; }
+    :root[data-theme='magenta']{ --accent:#ff2bd6; --bg:#0e0014; --card:#180021; --border:#2a0037; --control-bg:#1a0223; --switch-off:#20002c; --switch-off-border:#15001f; }
+    :root[data-theme='ultraviolet']{ --accent:#a46cff; --bg:#070114; --card:#0f0920; --border:#1b0d38; --control-bg:#130e2a; --switch-off:#140f2e; --switch-off-border:#0e0a22; }
+    :root[data-theme='acid-lime']{ --accent:#a7ff00; --bg:#060a06; --card:#0e1310; --border:#101810; --control-bg:#121a14; --switch-off:#0f1512; --switch-off-border:#0a0f0c; }
+    :root[data-theme='laser-orange']{ --accent:#ff8a00; --bg:#120700; --card:#1b0b02; --border:#261006; --control-bg:#1f1208; --switch-off:#21140b; --switch-off-border:#180f08; }
+    :root[data-theme='cyber-blue']{ --accent:#00b7ff; --bg:#02080f; --card:#071521; --border:#0a1c2c; --control-bg:#0b1d2e; --switch-off:#0b1723; --switch-off-border:#061117; }
+    :root[data-theme='noir']{ --accent:#ffd60a; --bg:#060607; --card:#0f0f12; --border:#17171c; --control-bg:#141418; --switch-off:#17171c; --switch-off-border:#101014; }
+
+    /* ===== Light / White Neon presets (high-contrast on white) ===== */
+    :root[data-theme='white-cyan']{
+      --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#0bb7ff; --border:#e5e7eb;
+      --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08);
+      --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#eef2f6; --switch-off-border:#dde3ea; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06);
+    }
+    :root[data-theme='white-magenta']{
+      --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#ff2bd6; --border:#e5e7eb;
+      --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08);
+      --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#f1f1f6; --switch-off-border:#e5e6ef; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06);
+    }
+    :root[data-theme='white-violet']{
+      --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#7c5cff; --border:#e5e7eb;
+      --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08);
+      --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#eef0ff; --switch-off-border:#e0e4ff; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06);
+    }
+    :root[data-theme='white-lime']{
+      --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#2ad100; --border:#e5e7eb;
+      --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08);
+      --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#ecf7ee; --switch-off-border:#ddeee1; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: var(--bg);
+      color:var(--ink);
+      font-family: ui-rounded, -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Text', Segoe UI, Roboto, Helvetica, Arial;
+      padding: max(env(safe-area-inset-top), 10px) 14px 16px 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app{ max-width: 430px; margin: 0 auto; }
+
+    .nav{
+      position: sticky; top: 0; z-index: 10;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      background: var(--blur-bg);
+      backdrop-filter: saturate(180%) blur(14px);
+      -webkit-backdrop-filter: saturate(180%) blur(14px);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      margin-bottom: 12px;
+    }
+    .brand img{ height:28px; width:auto; display:block; filter: drop-shadow(0 0 10px rgba(255,255,255,.06)); }
+    .controls{ display:flex; gap:8px; align-items:center; position:relative; }
+
+    .btn{ border:1px solid var(--border); background:var(--control-bg); color:var(--control-fg); border-radius:999px; padding:8px 12px; font-weight:800; cursor:pointer; }
+    .btn:focus-visible{ outline:3px solid color-mix(in srgb, var(--accent) 50%, transparent); outline-offset:2px; }
+
+    .menu{ position:absolute; right:0; top:44px; background:var(--card); border:1px solid var(--border); border-radius:14px; box-shadow: var(--shadow); min-width: 240px; padding:6px; display:none; }
+    .menu.open{ display:block; }
+    .menu button{ width:100%; text-align:left; padding:10px 12px; background:transparent; border:none; color:var(--ink); border-radius:10px; cursor:pointer; font-weight:800; }
+    .menu button:hover{ background: var(--menu-hover); }
+    .menu .sw{ width:12px; height:12px; border-radius:50%; display:inline-block; margin-right:8px; vertical-align:middle; }
+
+    .section{ padding:6px 10px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+
+    .grid{ display:grid; gap:12px; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
+
+    .panel{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .chip{ border:1px solid var(--border); background:var(--control-bg); padding:8px 10px; border-radius:999px; font-weight:800; cursor:pointer; color:var(--control-fg); }
+    .chip.accent{ border:2px solid var(--accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent); }
+    .chip.accent:focus-visible{ outline:3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset:2px; }
+
+    .habit-header{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .habit-name{ font-weight:900; letter-spacing:.6px; font-size:15px; flex:1; }
+    .habit-name[contenteditable="true"]{ outline:2px dashed color-mix(in srgb, var(--ink) 30%, transparent); border-radius:8px; padding:2px 6px; }
+    .icon{ background:transparent; border:none; color:var(--ink); cursor:pointer; padding:6px; border-radius:10px; }
+
+    .row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 2px; }
+    .day{ font-weight:900; letter-spacing:1.3px; min-width:64px; opacity:.95; }
+
+    .switch{ position:relative; width:70px; height:34px; margin-left:auto; border-radius:17px; background:var(--switch-off); transition: background .2s ease; border:1px solid var(--switch-off-border); }
+    .knob{ position:absolute; top:50%; left:3px; width:28px; height:28px; border-radius:14px; transform: translate(0,-50%); background:var(--knob); box-shadow:0 2px 10px rgba(0,0,0,.45), 0 0 8px color-mix(in srgb, var(--accent) 10%, transparent); transition: transform .2s cubic-bezier(.22,.61,.36,1), box-shadow .2s; }
+    .switch.on{ background: var(--accent); border-color: var(--accent); box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 35%, transparent); }
+    .switch.on .knob{ transform: translate(36px,-50%); box-shadow:0 2px 10px rgba(0,0,0,.45), 0 0 14px color-mix(in srgb, var(--accent) 60%, transparent); }
+
+    .empty{ text-align:center; color:var(--muted); border:1px dashed var(--border); padding:22px; border-radius:14px; }
+    .hint{ text-align:center; color:var(--muted); font-size:12px; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="nav">
+      <div class="brand"><img id="brandLogo" src="logo-dark.png" alt="Habit Tracker logo"></div>
+      <div class="controls">
+        <button id="themeBtn" class="btn" aria-haspopup="true" aria-expanded="false" aria-controls="themeMenu">🎨</button>
+        <div id="themeMenu" class="menu" role="menu" aria-label="Theme menu">
+          <div class="section">Dark Neon</div>
+          <button data-theme="neon-cyan" role="menuitem"><span class="sw" style="background:#00e5ff"></span>Neon Cyan</button>
+          <button data-theme="magenta" role="menuitem"><span class="sw" style="background:#ff2bd6"></span>Magenta Pink</button>
+          <button data-theme="ultraviolet" role="menuitem"><span class="sw" style="background:#a46cff"></span>Ultraviolet</button>
+          <button data-theme="acid-lime" role="menuitem"><span class="sw" style="background:#a7ff00"></span>Acid Lime</button>
+          <button data-theme="laser-orange" role="menuitem"><span class="sw" style="background:#ff8a00"></span>Laser Orange</button>
+          <button data-theme="cyber-blue" role="menuitem"><span class="sw" style="background:#00b7ff"></span>Cyber Blue</button>
+          <button data-theme="noir" role="menuitem"><span class="sw" style="background:#ffd60a"></span>Noir (Hi-Contrast)</button>
+          <div class="section">Light / White Neon</div>
+          <button data-theme="white-cyan" role="menuitem"><span class="sw" style="background:#0bb7ff"></span>White Neon (Cyan)</button>
+          <button data-theme="white-magenta" role="menuitem"><span class="sw" style="background:#ff2bd6"></span>White Neon (Magenta)</button>
+          <button data-theme="white-violet" role="menuitem"><span class="sw" style="background:#7c5cff"></span>White Neon (Violet)</button>
+          <button data-theme="white-lime" role="menuitem"><span class="sw" style="background:#2ad100"></span>White Neon (Lime)</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="panel">
+        <button id="add" class="chip accent">+ New Habit</button>
+        <button id="clear" class="chip accent">Clear Week</button>
+      </div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+    <div id="empty" class="empty" style="display:none">No habits yet. Tap <b>New Habit</b> to start.</div>
+    <div class="hint">Weekly view (Sun–Sat). Tap a switch to mark the day.</div>
+  </div>
+
+  <script>
+    const DAYS = ["SUN","MON","TUES","WED","THUR","FRI","SAT"];
+
+    const store = {
+      read(){ try{ return JSON.parse(localStorage.getItem("ios11-habits")||"[]"); }catch(e){ return []; } },
+      write(d){ localStorage.setItem("ios11-habits", JSON.stringify(d)); }
+    };
+    const prefs = {
+      read(){ try{ return JSON.parse(localStorage.getItem("ios11-prefs")||"{}"); }catch(e){ return {}; } },
+      write(d){ localStorage.setItem("ios11-prefs", JSON.stringify(d)); }
+    };
+
+    const state = { habits: store.read() };
+
+    function uid(){ return Math.random().toString(36).slice(2,9); }
+
+    function render(){
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      document.getElementById('empty').style.display = state.habits.length ? 'none' : 'block';
+
+      state.habits.forEach(habit=>{
+        const card = document.createElement('div'); card.className='card';
+
+        const header = document.createElement('div'); header.className='habit-header';
+        const name = document.createElement('div'); name.className='habit-name'; name.textContent = habit.name || 'Habit';
+        const edit = document.createElement('button'); edit.className='icon'; edit.textContent='✏️';
+        const del = document.createElement('button'); del.className='icon'; del.textContent='🗑️';
+
+        edit.addEventListener('click', ()=>{
+          const editing = name.getAttribute('contenteditable')==='true';
+          if(!editing){ name.setAttribute('contenteditable','true'); name.focus(); document.execCommand?.('selectAll',false,null); }
+          else { name.setAttribute('contenteditable','false'); habit.name = name.textContent.trim()||'Habit'; store.write(state.habits); }
+        });
+        name.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); name.blur(); } });
+        name.addEventListener('blur', ()=>{
+          if(name.getAttribute('contenteditable')==='true'){ name.setAttribute('contenteditable','false'); habit.name = name.textContent.trim()||'Habit'; store.write(state.habits); }
+        });
+        del.addEventListener('click', ()=>{
+          state.habits = state.habits.filter(h=>h.id!==habit.id); store.write(state.habits); render();
+        });
+
+        header.append(name, edit, del);
+        card.appendChild(header);
+
+        DAYS.forEach((d,i)=>{
+          const row = document.createElement('div'); row.className='row';
+          const label = document.createElement('div'); label.className='day'; label.textContent = d;
+          const sw = document.createElement('div'); sw.className = 'switch'+(habit.week[i]?' on':'');
+          const knob = document.createElement('div'); knob.className='knob';
+          sw.appendChild(knob);
+
+          const toggle = ()=>{
+            habit.week[i] = !habit.week[i];
+            sw.classList.toggle('on', habit.week[i]);
+            store.write(state.habits);
+          };
+          sw.addEventListener('click', toggle, {passive:true});
+          knob.addEventListener('click', (e)=>{ e.stopPropagation(); toggle(); }, {passive:true});
+
+          row.append(label, sw);
+          card.appendChild(row);
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    // Theme dropdown + logo/meta switching for light/dark
+    (function initTheme(){
+      const meta = document.getElementById('themeColorMeta');
+      const logo = document.getElementById('brandLogo');
+      const btn = document.getElementById('themeBtn');
+      const menu = document.getElementById('themeMenu');
+      let { theme='neon-cyan' } = prefs.read();
+
+      const darkThemes = new Set(['neon-cyan','magenta','ultraviolet','acid-lime','laser-orange','cyber-blue','noir']);
+      const lightThemes = new Set(['white-cyan','white-magenta','white-violet','white-lime']);
+
+      function setTheme(t){
+        document.documentElement.setAttribute('data-theme', t);
+        if(lightThemes.has(t)){
+          logo.src = 'logo-light.png';
+          meta.setAttribute('content', '#ffffff');
+        }else{
+          logo.src = 'logo-dark.png';
+          meta.setAttribute('content', '#0b0b0f');
+        }
+        prefs.write({ theme: t });
+      }
+
+      btn.addEventListener('click', ()=>{
+        const open = menu.classList.toggle('open');
+        btn.setAttribute('aria-expanded', String(open));
+      });
+      document.addEventListener('click', (e)=>{
+        if(!menu.contains(e.target) && e.target!==btn){ menu.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
+      });
+      menu.querySelectorAll('button[data-theme]').forEach(b=> b.addEventListener('click', ()=>{
+        setTheme(b.dataset.theme); menu.classList.remove('open'); btn.setAttribute('aria-expanded','false');
+      }));
+      setTheme(theme);
+    })();
+
+    document.getElementById('add').addEventListener('click', ()=>{
+      state.habits.push({ id: uid(), name:'Habit', week:[false,false,false,false,false,false,false] });
+      store.write(state.habits); render();
+    });
+    document.getElementById('clear').addEventListener('click', ()=>{
+      state.habits = state.habits.map(h=>({ ...h, week:[false,false,false,false,false,false,false] }));
+      store.write(state.habits); render();
+    });
+
+    if(state.habits.length===0){
+      state.habits=[{id:uid(), name:'Workout', week:[false,false,false,false,false,false,false]}];
+      store.write(state.habits);
+    }
+
+    render();
+
+    if('serviceWorker' in navigator){ window.addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js')); }
+  </script>
+</body>
+</html>
