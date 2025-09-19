@@ -6,60 +6,47 @@
   <title>Habit Tracker</title>
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" id="themeColorMeta" content="#0b0b0f">
+  <meta name="theme-color" id="themeColorMeta" content="#ffffff">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <style>
-    /* ===== Base defaults (dark-ish) ===== */
+    /* ===== Base defaults (light-ish placeholders overridden by themes) ===== */
     :root{
-      --bg:#0b0b0f;
-      --card:#12131a;
-      --ink:#f5f7ff;
-      --muted:#eaeaff;
-      --accent:#00e5ff;
-      --border:#1a1b23;
-      --blur-bg:rgba(18,19,26,.7);
-      --shadow:0 12px 32px rgba(0,0,0,.6);
+      --bg:#ffffff;
+      --card:#ffffff;
+      --ink:#0b0b0b;
+      --muted:#334155;
+      --accent:#2ad100;
+      --border:#e5e7eb;
+      --blur-bg:rgba(255,255,255,.78);
+      --shadow:0 10px 26px rgba(0,0,0,.08);
       --radius:18px;
-      --control-bg:#161723;
-      --control-fg:#ffffff;
-      --switch-off:#1a1d27;
-      --switch-off-border:#101219;
+      --control-bg:#ffffff;
+      --control-fg:#0b0b0b;
+      --switch-off:#eef2f6;
+      --switch-off-border:#dde3ea;
       --knob:#ffffff;
-      --hover:#26293a;
-      --menu-hover:#26293a;
+      --hover:rgba(2,6,23,.06);
+      --menu-hover:rgba(2,6,23,.06);
     }
 
     /* ===== Dark Neon / Cyberpunk presets ===== */
-    :root[data-theme='neon-cyan']{ --accent:#00e5ff; --bg:#030712; --card:#0a0f1f; --border:#101a2a; --control-bg:#0f172a; --switch-off:#0b1222; --switch-off-border:#08101c; }
-    :root[data-theme='magenta']{ --accent:#ff2bd6; --bg:#0e0014; --card:#180021; --border:#2a0037; --control-bg:#1a0223; --switch-off:#20002c; --switch-off-border:#15001f; }
-    :root[data-theme='ultraviolet']{ --accent:#a46cff; --bg:#070114; --card:#0f0920; --border:#1b0d38; --control-bg:#130e2a; --switch-off:#140f2e; --switch-off-border:#0e0a22; }
-    :root[data-theme='acid-lime']{ --accent:#a7ff00; --bg:#060a06; --card:#0e1310; --border:#101810; --control-bg:#121a14; --switch-off:#0f1512; --switch-off-border:#0a0f0c; }
-    :root[data-theme='laser-orange']{ --accent:#ff8a00; --bg:#120700; --card:#1b0b02; --border:#261006; --control-bg:#1f1208; --switch-off:#21140b; --switch-off-border:#180f08; }
-    :root[data-theme='cyber-blue']{ --accent:#00b7ff; --bg:#02080f; --card:#071521; --border:#0a1c2c; --control-bg:#0b1d2e; --switch-off:#0b1723; --switch-off-border:#061117; }
-    :root[data-theme='noir']{ --accent:#ffd60a; --bg:#060607; --card:#0f0f12; --border:#17171c; --control-bg:#141418; --switch-off:#17171c; --switch-off-border:#101014; }
+    :root[data-theme='neon-cyan']{ --accent:#00e5ff; --bg:#030712; --card:#0a0f1f; --ink:#f5f7ff; --muted:#eaeaff; --border:#101a2a; --blur-bg:rgba(10,15,31,.7); --shadow:0 12px 32px rgba(0,0,0,.6); --control-bg:#0f172a; --control-fg:#ffffff; --switch-off:#0b1222; --switch-off-border:#08101c; --hover:#26293a; --menu-hover:#26293a; }
+    :root[data-theme='magenta']{ --accent:#ff2bd6; --bg:#0e0014; --card:#180021; --ink:#fef2ff; --muted:#fde6ff; --border:#2a0037; --blur-bg:rgba(24,0,33,.7); --shadow:0 12px 32px rgba(0,0,0,.6); --control-bg:#1a0223; --control-fg:#ffffff; --switch-off:#20002c; --switch-off-border:#15001f; --hover:#2a0a2f; --menu-hover:#2a0a2f; }
+    :root[data-theme='ultraviolet']{ --accent:#a46cff; --bg:#070114; --card:#0f0920; --ink:#f7f2ff; --muted:#e8deff; --border:#1b0d38; --blur-bg:rgba(15,9,32,.7); --shadow:0 12px 32px rgba(0,0,0,.6); --control-bg:#130e2a; --control-fg:#ffffff; --switch-off:#140f2e; --switch-off-border:#0e0a22; --hover:#251d3d; --menu-hover:#251d3d; }
+    :root[data-theme='acid-lime']{ --accent:#a7ff00; --bg:#060a06; --card:#0e1310; --ink:#f5ffe8; --muted:#e6ffe1; --border:#101810; --blur-bg:rgba(14,19,16,.7); --shadow:0 12px 32px rgba(0,0,0,.6); --control-bg:#121a14; --control-fg:#ffffff; --switch-off:#0f1512; --switch-off-border:#0a0f0c; --hover:#1f2a22; --menu-hover:#1f2a22; }
+    :root[data-theme='laser-orange']{ --accent:#ff8a00; --bg:#120700; --card:#1b0b02; --ink:#fff7ef; --muted:#ffe9d6; --border:#261006; --blur-bg:rgba(27,11,2,.7); --shadow:0 12px 32px rgba(0,0,0,.6); --control-bg:#1f1208; --control-fg:#ffffff; --switch-off:#21140b; --switch-off-border:#180f08; --hover:#2c1a10; --menu-hover:#2c1a10; }
+    :root[data-theme='cyber-blue']{ --accent:#00b7ff; --bg:#02080f; --card:#071521; --ink:#e9f6ff; --muted:#d9efff; --border:#0a1c2c; --blur-bg:rgba(7,21,33,.7); --shadow:0 12px 32px rgba(0,0,0,.6); --control-bg:#0b1d2e; --control-fg:#ffffff; --switch-off:#0b1723; --switch-off-border:#061117; --hover:#13283a; --menu-hover:#13283a; }
+    :root[data-theme='noir']{ --accent:#ffd60a; --bg:#060607; --card:#0f0f12; --ink:#ffffff; --muted:#ffffff; --border:#17171c; --blur-bg:rgba(15,15,18,.7); --shadow:0 12px 32px rgba(0,0,0,.6); --control-bg:#141418; --control-fg:#ffffff; --switch-off:#17171c; --switch-off-border:#101014; --hover:#242429; --menu-hover:#242429; }
 
-    /* ===== Light / White Neon presets (high-contrast on white) ===== */
-    :root[data-theme='white-cyan']{
-      --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#0bb7ff; --border:#e5e7eb;
-      --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08);
-      --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#eef2f6; --switch-off-border:#dde3ea; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06);
-    }
-    :root[data-theme='white-magenta']{
-      --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#ff2bd6; --border:#e5e7eb;
-      --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08);
-      --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#f1f1f6; --switch-off-border:#e5e6ef; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06);
-    }
-    :root[data-theme='white-violet']{
-      --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#7c5cff; --border:#e5e7eb;
-      --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08);
-      --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#eef0ff; --switch-off-border:#e0e4ff; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06);
-    }
-    :root[data-theme='white-lime']{
-      --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#2ad100; --border:#e5e7eb;
-      --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08);
-      --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#ecf7ee; --switch-off-border:#ddeee1; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06);
-    }
+    /* ===== Light / White Neon presets (DEFAULT -> white-lime with more lime-yellow) ===== */
+    :root[data-theme='white-cyan']{ --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#0bb7ff; --border:#e5e7eb; --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08); --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#eef2f6; --switch-off-border:#dde3ea; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06); }
+    :root[data-theme='white-magenta']{ --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#ff2bd6; --border:#e5e7eb; --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08); --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#f1f1f6; --switch-off-border:#e5e6ef; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06); }
+    :root[data-theme='white-violet']{ --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#7c5cff; --border:#e5e7eb; --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08); --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#eef0ff; --switch-off-border:#e0e4ff; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06); }
+    /* More lime-yellow accent for white-lime */
+    :root[data-theme='white-lime']{ --bg:#ffffff; --card:#ffffff; --ink:#0b0b0b; --muted:#334155; --accent:#D4FF00; --border:#e5e7eb; --blur-bg:rgba(255,255,255,.78); --shadow:0 10px 26px rgba(0,0,0,.08); --control-bg:#ffffff; --control-fg:#0b0b0b; --switch-off:#ecf7ee; --switch-off-border:#ddeee1; --knob:#ffffff; --hover:rgba(2,6,23,.06); --menu-hover:rgba(2,6,23,.06); }
 
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -85,7 +72,7 @@
       box-shadow: var(--shadow);
       margin-bottom: 12px;
     }
-    .brand img{ height:28px; width:auto; display:block; filter: drop-shadow(0 0 10px rgba(255,255,255,.06)); }
+    .brand img{ height:28px; width:auto; display:block; }
     .controls{ display:flex; gap:8px; align-items:center; position:relative; }
 
     .btn{ border:1px solid var(--border); background:var(--control-bg); color:var(--control-fg); border-radius:999px; padding:8px 12px; font-weight:800; cursor:pointer; }
@@ -96,7 +83,6 @@
     .menu button{ width:100%; text-align:left; padding:10px 12px; background:transparent; border:none; color:var(--ink); border-radius:10px; cursor:pointer; font-weight:800; }
     .menu button:hover{ background: var(--menu-hover); }
     .menu .sw{ width:12px; height:12px; border-radius:50%; display:inline-block; margin-right:8px; vertical-align:middle; }
-
     .section{ padding:6px 10px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
 
     .grid{ display:grid; gap:12px; }
@@ -116,9 +102,9 @@
     .day{ font-weight:900; letter-spacing:1.3px; min-width:64px; opacity:.95; }
 
     .switch{ position:relative; width:70px; height:34px; margin-left:auto; border-radius:17px; background:var(--switch-off); transition: background .2s ease; border:1px solid var(--switch-off-border); }
-    .knob{ position:absolute; top:50%; left:3px; width:28px; height:28px; border-radius:14px; transform: translate(0,-50%); background:var(--knob); box-shadow:0 2px 10px rgba(0,0,0,.45), 0 0 8px color-mix(in srgb, var(--accent) 10%, transparent); transition: transform .2s cubic-bezier(.22,.61,.36,1), box-shadow .2s; }
-    .switch.on{ background: var(--accent); border-color: var(--accent); box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 35%, transparent); }
-    .switch.on .knob{ transform: translate(36px,-50%); box-shadow:0 2px 10px rgba(0,0,0,.45), 0 0 14px color-mix(in srgb, var(--accent) 60%, transparent); }
+    .knob{ position:absolute; top:50%; left:3px; width:28px; height:28px; border-radius:14px; transform: translate(0,-50%); background:var(--knob); box-shadow:0 2px 10px rgba(0,0,0,.15); transition: transform .2s cubic-bezier(.22,.61,.36,1), box-shadow .2s; }
+    .switch.on{ background: var(--accent); border-color: var(--accent); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 35%, transparent); }
+    .switch.on .knob{ transform: translate(36px,-50%); box-shadow:0 2px 10px rgba(0,0,0,.15); }
 
     .empty{ text-align:center; color:var(--muted); border:1px dashed var(--border); padding:22px; border-radius:14px; }
     .hint{ text-align:center; color:var(--muted); font-size:12px; margin-top:8px; }
@@ -127,7 +113,7 @@
 <body>
   <div class="app">
     <div class="nav">
-      <div class="brand"><img id="brandLogo" src="logo-dark.png" alt="Habit Tracker logo"></div>
+      <div class="brand"><img id="brandLogo" src="logo-light.png" alt="Habit Tracker logo"></div>
       <div class="controls">
         <button id="themeBtn" class="btn" aria-haspopup="true" aria-expanded="false" aria-controls="themeMenu">🎨</button>
         <div id="themeMenu" class="menu" role="menu" aria-label="Theme menu">
@@ -143,7 +129,7 @@
           <button data-theme="white-cyan" role="menuitem"><span class="sw" style="background:#0bb7ff"></span>White Neon (Cyan)</button>
           <button data-theme="white-magenta" role="menuitem"><span class="sw" style="background:#ff2bd6"></span>White Neon (Magenta)</button>
           <button data-theme="white-violet" role="menuitem"><span class="sw" style="background:#7c5cff"></span>White Neon (Violet)</button>
-          <button data-theme="white-lime" role="menuitem"><span class="sw" style="background:#2ad100"></span>White Neon (Lime)</button>
+          <button data-theme="white-lime" role="menuitem"><span class="sw" style="background:#D4FF00"></span>White Neon (Lime)</button>
         </div>
       </div>
     </div>
@@ -164,12 +150,12 @@
     const DAYS = ["SUN","MON","TUES","WED","THUR","FRI","SAT"];
 
     const store = {
-      read(){ try{ return JSON.parse(localStorage.getItem("ios11-habits")||"[]"); }catch(e){ return []; } },
-      write(d){ localStorage.setItem("ios11-habits", JSON.stringify(d)); }
+      read(){ try{ return JSON.parse(localStorage.getItem("ios12-habits")||"[]"); }catch(e){ return []; } },
+      write(d){ localStorage.setItem("ios12-habits", JSON.stringify(d)); }
     };
     const prefs = {
-      read(){ try{ return JSON.parse(localStorage.getItem("ios11-prefs")||"{}"); }catch(e){ return {}; } },
-      write(d){ localStorage.setItem("ios11-prefs", JSON.stringify(d)); }
+      read(){ try{ return JSON.parse(localStorage.getItem("ios12-prefs")||"{}"); }catch(e){ return {}; } },
+      write(d){ localStorage.setItem("ios12-prefs", JSON.stringify(d)); }
     };
 
     const state = { habits: store.read() };
@@ -228,15 +214,15 @@
       });
     }
 
-    // Theme dropdown + logo/meta switching for light/dark
+    // Theme dropdown with default 'white-lime' + logo/meta switching
     (function initTheme(){
       const meta = document.getElementById('themeColorMeta');
       const logo = document.getElementById('brandLogo');
       const btn = document.getElementById('themeBtn');
       const menu = document.getElementById('themeMenu');
-      let { theme='neon-cyan' } = prefs.read();
+      let { theme } = prefs.read();
+      if(!theme){ theme = 'white-lime'; }  // DEFAULT
 
-      const darkThemes = new Set(['neon-cyan','magenta','ultraviolet','acid-lime','laser-orange','cyber-blue','noir']);
       const lightThemes = new Set(['white-cyan','white-magenta','white-violet','white-lime']);
 
       function setTheme(t){
