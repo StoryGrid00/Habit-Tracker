@@ -118,7 +118,7 @@
       border: 1px solid var(--switch-off-border);
       border-radius: 999px;
       overflow: hidden;
-      margin-top: 8px;
+      margin: 8px 0 2px 0;
     }
     .progress__bar{
       height: 100%;
@@ -134,9 +134,31 @@
       color: var(--muted);
       user-select:none;
     }
+    /* ===== Tiny toast for confirmations ===== */
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(12px);
+      padding: 10px 14px;
+      background: var(--control-bg);
+      color: var(--control-fg);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: .02em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease;
+      z-index: 999;
+    }
+    .toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
+  <canvas id="confetti-canvas" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999; opacity:0; transition: opacity .25s ease;"></canvas>
   <div class="app">
     <div class="nav">
       <div class="brand"><img id="brandLogo" src="logo-light.png" alt="Habit Tracker logo"></div>
@@ -169,15 +191,63 @@
 
     <div id="grid" class="grid"></div>
     <div id="empty" class="empty" style="display:none">No habits yet. Tap <b>New Habit</b> to start.</div>
-    <div class="hint">Weekly view (Sun–Sat). Tap a switch to mark the day.</div>
+    <div class="hint">Weekly view (Sun–Sat). Tap a switch to mark the day.
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+</div>
   </div>
 
-  
   <script>
-    // Safe stub so outer handlers don't error; real per-card updateProgress lives inside render()
-    window.updateProgress = window.updateProgress || function(){};
-
     const DAYS = ["SUN","MON","TUES","WED","THUR","FRI","SAT"];
+
+    function showToast(msg){
+      const el = document.getElementById('toast');
+      if(!el) return;
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(()=> el.classList.remove('show'), 1200);
+    }
+
+    // === Confetti Animation System ===
+    function initializeConfetti(){
+      const canvas = document.getElementById("confetti-canvas");
+      if(!canvas) return;
+      const ctx = canvas.getContext("2d");
+      let particles = [];
+      let rafId = null;
+
+      function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      window.addEventListener("resize", resize, {passive:true}); resize();
+
+      function particle(x,y){
+        return { x, y, dx: Math.random()*6-3, dy: Math.random()*-5-2, size: Math.random()*6+4, color: `hsl(${Math.random()*360},80%,60%)`, life: 100 };
+      }
+
+      function stop(){
+        if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        canvas.style.opacity = '0';
+        particles = [];
+      }
+
+      function tick(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        for(let i=particles.length-1;i>=0;i--){
+          const p = particles[i];
+          p.x += p.dx; p.y += p.dy; p.dy += 0.1; p.life--;
+          ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+          if(p.life<=0) particles.splice(i,1);
+        }
+        if(particles.length>0){ rafId = requestAnimationFrame(tick); } else { stop(); }
+      }
+
+      window.fireConfetti = function(x = canvas.width/2, y = canvas.height/2){
+        canvas.style.opacity = '1';
+        for(let i=0;i<100;i++){ particles.push(particle(x,y)); }
+        if(!rafId) tick();
+      };
+    }
+
 
     const store = {
       read(){ try{ return JSON.parse(localStorage.getItem("ios12-habits")||"[]"); }catch(e){ return []; } },
@@ -209,16 +279,21 @@
           const editing = name.getAttribute('contenteditable')==='true';
           if(!editing){ name.setAttribute('contenteditable','true'); name.focus(); document.execCommand?.('selectAll',false,null); }
           else { name.setAttribute('contenteditable','false'); habit.name = name.textContent.trim()||'Habit'; store.write(state.habits);
-            updateProgress(); }
+            updateProgress();
+            try{ const doneNow = habit.week.filter(Boolean).length; if(doneNow===7 && !habit._celebrated){ habit._celebrated = true; window.fireConfetti && window.fireConfetti(); } }catch(e){} }
         });
         name.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); name.blur(); } });
         name.addEventListener('blur', ()=>{
           if(name.getAttribute('contenteditable')==='true'){ name.setAttribute('contenteditable','false'); habit.name = name.textContent.trim()||'Habit'; store.write(state.habits);
-            updateProgress(); }
+            updateProgress();
+            try{ const doneNow = habit.week.filter(Boolean).length; if(doneNow===7 && !habit._celebrated){ habit._celebrated = true; window.fireConfetti && window.fireConfetti(); } }catch(e){} }
         });
-        del.addEventListener('click', ()=>{
+        del.addEventListener('click', ()=>{ showToast('Habit deleted');
           state.habits = state.habits.filter(h=>h.id!==habit.id); store.write(state.habits);
-            updateProgress(); render();
+            updateProgress();
+            try{ const doneNow = habit.week.filter(Boolean).length; if(doneNow===7 && !habit._celebrated){ habit._celebrated = true; window.fireConfetti && window.fireConfetti(); } }catch(e){} render();
+
+    try{ initializeConfetti(); }catch(e){}
         });
 
         header.append(name, edit, del);
@@ -227,8 +302,7 @@
         const progress = document.createElement('div'); progress.className = 'progress';
         const bar = document.createElement('div'); bar.className = 'progress__bar';
         const label = document.createElement('div'); label.className = 'progress__label';
-        progress.appendChild(bar);
-        progress.appendChild(label);
+        progress.append(bar, label);
         card.appendChild(progress);
 
         function updateProgress(){
@@ -241,6 +315,11 @@
           progress.setAttribute('aria-valuenow', String(done));
           progress.title = done + '/7 days completed';
           label.textContent = pct + '%';
+          if(done===7 && !habit._celebrated){ habit._celebrated = true; window.fireConfetti && window.fireConfetti(); }
+          if(done===7 && !habit._celebrated){
+            habit._celebrated = true;
+            if(window.fireConfetti) window.fireConfetti();
+          }
         }
         updateProgress();
 
@@ -257,6 +336,7 @@
             sw.classList.toggle('on', habit.week[i]);
             store.write(state.habits);
             updateProgress();
+            try{ const doneNow = habit.week.filter(Boolean).length; if(doneNow===7 && !habit._celebrated){ habit._celebrated = true; window.fireConfetti && window.fireConfetti(); } }catch(e){}
             updateProgress();
           };
           sw.addEventListener('click', toggle, {passive:true});
@@ -307,20 +387,22 @@
     })();
 
     document.getElementById('add').addEventListener('click', ()=>{
-      state.habits.push({ id: uid(), name:'Habit', week:[false,false,false,false,false,false,false] });
+      state.habits.push({ id: uid(), name:'Habit', week:[false,false,false,false,false,false,false], _celebrated:false });
       store.write(state.habits);
-            updateProgress(); render();
+      render();
+      showToast('Habit added');
     });
     document.getElementById('clear').addEventListener('click', ()=>{
-      state.habits = state.habits.map(h=>({ ...h, week:[false,false,false,false,false,false,false] }));
+      state.habits = state.habits.map(h=>({ ...h, week:[false,false,false,false,false,false,false], _celebrated:false }));
       store.write(state.habits);
-            updateProgress(); render();
+      render();
     });
 
     if(state.habits.length===0){
-      state.habits=[{id:uid(), name:'Workout', week:[false,false,false,false,false,false,false]}];
+      state.habits=[{id:uid(), name:'Workout', week:[false,false,false,false,false,false,false], _celebrated:false}];
       store.write(state.habits);
             updateProgress();
+            try{ const doneNow = habit.week.filter(Boolean).length; if(doneNow===7 && !habit._celebrated){ habit._celebrated = true; window.fireConfetti && window.fireConfetti(); } }catch(e){}
     }
 
     render();
