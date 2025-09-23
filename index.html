@@ -171,6 +171,98 @@
     }
     .toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
+
+  <style>
+    .badges-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap:10px; }
+    .badge-card{ border:1px solid var(--outline, rgba(255,255,255,.12)); border-radius:12px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; min-height:110px; }
+    .badge-card .icon{ font-size:28px; line-height:1.2; }
+    .badge-card .name{ font-weight:600; margin-top:6px; }
+    .badge-card .req{ font-size:.85rem; opacity:.8; }
+    .badge-card.locked{ filter: grayscale(1) contrast(.8); opacity:.5; }
+    #pointsPill{ margin-left:4px; }
+  </style>
+
+  <style>
+    /* Mobile-first Achievements Modal */
+    .modal{ position:fixed; inset:0; display:none; z-index:10000; }
+    .modal.open{ display:block; }
+    .modal__backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.5); }
+    /* Default (mobile) = full-screen sheet */
+    .modal__dialog{
+      position:relative;
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+      border-radius: 0;
+      background: var(--card, #0e1310);
+      color: var(--ink, #f5ffe8);
+      display:flex; flex-direction:column;
+      overflow:hidden;
+      box-shadow: var(--shadow, 0 10px 26px rgba(0,0,0,.3));
+    }
+    .modal__header{ padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.08); }
+    .modal__content{
+      padding:12px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      background: var(--card, #0e1310);
+      flex:1 1 auto;
+    }
+    .modal__footer{
+      position: sticky;
+      bottom: 0;
+      padding: 12px;
+      background: var(--card, #0e1310);
+      border-top: 1px solid rgba(255,255,255,.08);
+      display:flex; justify-content:flex-end;
+      flex-shrink:0;
+    }
+    /* Larger screens get a centered dialog */
+    @media (min-width: 700px){
+      .modal__dialog{
+        margin: 10vh auto 0 auto;
+        width: calc(100% - 24px);
+        max-width: 520px;
+        height: auto;
+        max-height: 80vh;
+        border-radius: 16px;
+      }
+    }
+  </style>
+
+  <style>
+    /* Unify card width (mobile-first) */
+    .app > .card{ max-width: 760px; margin-left:auto; margin-right:auto; }
+    /* Keep mobile full width by default; max-width only constrains on larger screens */
+    @media (max-width: 480px){
+      .app > .card{ max-width: 100%; }
+    }
+    /* Outline style for primary action chips */
+    #add.chip.accent, #clear.chip.accent{
+      background: transparent !important;
+      border: 2px solid var(--ink, #111);
+      color: var(--ink, #111);
+    }
+    /* High-contrast text for 508 across themes */
+    [data-theme="dark-mono"] #add.chip.accent, [data-theme="dark-mono"] #clear.chip.accent,
+    [data-theme="noir"] #add.chip.accent, [data-theme="noir"] #clear.chip.accent,
+    [data-theme="magenta"] #add.chip.accent, [data-theme="magenta"] #clear.chip.accent,
+    [data-theme="ultraviolet"] #add.chip.accent, [data-theme="ultraviolet"] #clear.chip.accent,
+    [data-theme="acid-lime"] #add.chip.accent, [data-theme="acid-lime"] #clear.chip.accent,
+    [data-theme="laser-orange"] #add.chip.accent, [data-theme="laser-orange"] #clear.chip.accent,
+    [data-theme="cyber-blue"] #add.chip.accent, [data-theme="cyber-blue"] #clear.chip.accent,
+    [data-theme="neon-cyan"] #add.chip.accent, [data-theme="neon-cyan"] #clear.chip.accent {
+      border-color: var(--ink, #f5ffe8);
+      color: var(--ink, #f5ffe8);
+    }
+    /* Focus ring for keyboard users */
+    #add.chip.accent:focus-visible, #clear.chip.accent:focus-visible{
+      outline: 3px solid rgba(0,0,0,.5);
+      outline-offset: 2px;
+    }
+  </style>
 </head>
 <body>
   <canvas id="confetti-canvas" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999; opacity:0; transition: opacity .25s ease;"></canvas>
@@ -179,6 +271,7 @@
       <div class="brand"><img id="brandLogo" src="logo-light.png" alt="Habit Tracker logo"></div>
       <div class="controls">
         <button id="themeBtn" class="btn" aria-haspopup="true" aria-expanded="false" aria-controls="themeMenu">🎨</button>
+        <button id="achievementsToggle" class="btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="achievements" title="Achievements">🏆</button>
         <div id="themeMenu" class="menu" role="menu" aria-label="Theme menu">
           <div class="section">Dark Neon</div>
           <button data-theme="neon-cyan" role="menuitem"><span class="sw" style="background:#00e5ff"></span>Neon Cyan</button>
@@ -204,7 +297,34 @@
       <div class="panel">
         <button id="add" class="chip accent">+ New Habit</button>
         <button id="clear" class="chip accent">Clear Week</button>
+        <span id="pointsPill" class="chip" role="status" aria-live="polite" aria-atomic="true" title="Total points">Points: 0</span>
       </div>
+    </div>
+
+
+    
+    <div id="achievements" class="modal" aria-hidden="true" style="display:none">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="achievementsTitle">
+        <div class="modal__header">
+          <div id="achievementsTitle" class="habit-name">Achievements</div>
+        </div>
+        <div class="modal__content">
+          <div class="panel" style="gap:8px; align-items:center">
+            <div id="pointsDisplay" class="chip" aria-live="polite" aria-atomic="true">Points: 0</div>
+            <div id="lastBadge" class="chip" style="display:none"></div>
+          </div>
+          <div id="badgesGrid" class="badges-grid" role="list" aria-label="Badges list"></div>
+        </div>
+        <div class="modal__footer">
+          <button id="achievementsClose" class="chip accent" data-close="true">Close</button>
+        </div>
+      </div>
+    </div>
+</div>
+      
+    </div>
+</div>
     </div>
 
     <div id="grid" class="grid"></div>
@@ -276,6 +396,124 @@
 
     const state = { habits: store.read() };
 
+    // --- Points & Badges System ---
+    const pointsStore = {
+      read(){ const n = Number(localStorage.getItem("ios12-points")||"0"); return isNaN(n)?0:n; },
+      write(v){ localStorage.setItem("ios12-points", String(Math.max(0, v|0))); }
+    };
+    const badgeStore = {
+      read(){ try{ return JSON.parse(localStorage.getItem("ios12-badges")||"{}"); }catch(e){ return {}; } },
+      write(d){ localStorage.setItem("ios12-badges", JSON.stringify(d)); }
+    };
+
+    // Challenging progression: many completions required
+    const BADGES = [
+      {id:"starter-bronze", name:"Bronze Starter", icon:"🥉", threshold:10, desc:"Earn 10 points"},
+      {id:"starter-silver", name:"Silver Starter", icon:"🥈", threshold:25, desc:"Earn 25 points"},
+      {id:"starter-gold",   name:"Gold Starter",   icon:"🥇", threshold:50, desc:"Earn 50 points"},
+      {id:"habit-scout",    name:"Habit Scout",    icon:"🪖", threshold:75, desc:"Earn 75 points"},
+      {id:"habit-pro",      name:"Habit Pro",      icon:"💪", threshold:100, desc:"Earn 100 points"},
+      {id:"focus-fiend",    name:"Focus Fiend",    icon:"🎯", threshold:150, desc:"Earn 150 points"},
+      {id:"consistency",    name:"Consistency King", icon:"👑", threshold:200, desc:"Earn 200 points"},
+      {id:"streak-adept",   name:"Streak Adept",   icon:"⚡", threshold:300, desc:"Earn 300 points"},
+      {id:"zen-master",     name:"Streak Master",  icon:"🧘", threshold:400, desc:"Earn 400 points"},
+      {id:"grit",           name:"Grit Grinder",   icon:"⛏️", threshold:500, desc:"Earn 500 points"},
+      {id:"thousand",       name:"Millennium",     icon:"🌟", threshold:650, desc:"Earn 650 points"},
+      {id:"meteor",         name:"Meteor Momentum",icon:"☄️", threshold:800, desc:"Earn 800 points"},
+      {id:"nova",           name:"Nova",           icon:"✨", threshold:1000, desc:"Earn 1,000 points"},
+      {id:"comet",          name:"Comet Keeper",   icon:"🪐", threshold:1250, desc:"Earn 1,250 points"},
+      {id:"galaxy",         name:"Galaxy Tamer",   icon:"🌌", threshold:1500, desc:"Earn 1,500 points"},
+      {id:"nebula",         name:"Nebula Knight",  icon:"🛡️", threshold:1750, desc:"Earn 1,750 points"},
+      {id:"cosmic",         name:"Cosmic Captain", icon:"🚀", threshold:2000, desc:"Earn 2,000 points"},
+      {id:"legend",         name:"Habit Legend",   icon:"🏆", threshold:2500, desc:"Earn 2,500 points"},
+      {id:"mythic",         name:"Mythic Mender",  icon:"🗿", threshold:3000, desc:"Earn 3,000 points"},
+      {id:"eternal",        name:"Eternal Engine", icon:"♾️", threshold:4000, desc:"Earn 4,000 points"}
+    ];
+
+    let points = pointsStore.read();
+    let unlocked = badgeStore.read(); // map of id:true
+
+    function addPoints(delta){
+      const before = points;
+      points = Math.max(0, points + (delta|0));
+      if(points!==before){
+        pointsStore.write(points);
+        updatePointsUI();
+        checkBadgesUnlock();
+      }
+    }
+
+    function checkBadgesUnlock(){
+      let newly = [];
+      BADGES.forEach(b=>{
+        if(points >= b.threshold && !unlocked[b.id]){
+          unlocked[b.id] = true;
+          newly.push(b);
+        }
+      });
+      if(newly.length){
+        badgeStore.write(unlocked);
+        renderBadges();
+        const last = newly[newly.length-1];
+        const lastBadgeEl = document.getElementById('lastBadge');
+        if(lastBadgeEl){
+          lastBadgeEl.style.display='inline-flex';
+          lastBadgeEl.textContent = `Unlocked: ${last.icon} ${last.name}!`;
+          showToast?.(`Unlocked ${last.name}!`);
+        }
+        window.fireConfetti && window.fireConfetti();
+      }
+    }
+
+    function updatePointsUI(){
+      const pill = document.getElementById('pointsPill');
+      const disp = document.getElementById('pointsDisplay');
+      if(pill) pill.textContent = `Points: ${points}`;
+      if(disp) disp.textContent = `Points: ${points}`;
+    }
+
+    function renderBadges(){
+      const grid = document.getElementById('badgesGrid');
+      if(!grid) return;
+      grid.innerHTML = '';
+      BADGES.forEach(b=>{
+        const li = document.createElement('div');
+        li.className = 'badge-card'+(unlocked[b.id]?'':' locked');
+        li.setAttribute('role','listitem');
+        li.setAttribute('aria-label', `${b.name} — requires ${b.threshold} points`);
+        li.innerHTML = `<div class="icon" aria-hidden="true">${b.icon}</div>
+                        <div class="name">${b.name}</div>
+                        <div class="req">${b.threshold} pts</div>`;
+        grid.appendChild(li);
+      });
+    }
+
+    
+    function toggleAchievements(){
+      const modal = document.getElementById('achievements');
+      const btn = document.getElementById('achievementsToggle');
+      if(!modal || !btn) return;
+      const isOpen = modal.classList.contains('open');
+      if(isOpen){
+        modal.classList.remove('open');
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden','true');
+        document.body.style.overflow = '';
+        btn.setAttribute('aria-expanded','false');
+        btn.focus?.();
+      }else{
+        modal.classList.add('open');
+        modal.style.display = 'block';
+        modal.setAttribute('aria-hidden','false');
+        document.body.style.overflow = 'hidden';
+        btn.setAttribute('aria-expanded','true');
+        // focus the close button
+        document.getElementById('achievementsClose')?.focus();
+      }
+    }
+    
+
+
     function uid(){ return Math.random().toString(36).slice(2,9); }
 
     function render(){
@@ -308,6 +546,8 @@
           }
         });
         del.addEventListener('click', ()=>{
+          // Deduct points for completed days within this habit
+          const deduct = habit.week.filter(Boolean).length; if(deduct>0) addPoints(-deduct);
           showToast('Habit deleted');
           state.habits = state.habits.filter(h=>h.id!==habit.id); store.write(state.habits);
           render();
@@ -346,11 +586,13 @@
           sw.appendChild(knob);
 
           const toggle = ()=>{
+            const wasOn = !!habit.week[i];
             habit.week[i] = !habit.week[i];
             sw.classList.toggle('on', habit.week[i]);
             store.write(state.habits);
             updateProgress();
             updateFinishWeekButtonState();
+            if(!wasOn && habit.week[i]){ addPoints(1); } else if(wasOn && !habit.week[i]){ addPoints(-1); }
           };
           sw.addEventListener("click", toggle, {passive:true});
           knob.addEventListener("click", (e)=>{ e.stopPropagation(); toggle(); }, {passive:true});
@@ -383,6 +625,7 @@
         grid.appendChild(card);
       });
       updateFinishWeekButtonState(); // Update button state after rendering habits
+      renderBadges(); updatePointsUI(); checkBadgesUnlock();
     }
 
     function updateFinishWeekButtonState() {
@@ -445,6 +688,9 @@
       updateFinishWeekButtonState();
     });
     document.getElementById('clear').addEventListener('click', ()=>{
+      // Deduct points for any checked days being cleared
+      const toDeduct = state.habits.reduce((sum,h)=> sum + h.week.filter(Boolean).length, 0);
+      if(toDeduct>0) addPoints(-toDeduct);
       state.habits = state.habits.map(h=>({ ...h, week:[false,false,false,false,false,false,false] }));
       store.write(state.habits);
       render();
@@ -464,6 +710,30 @@
     initializeConfetti(); // Initialize confetti once after initial render
 
     if("serviceWorker" in navigator){ window.addEventListener("load", ()=> navigator.serviceWorker.register("./sw.js")); }
-  </script>
+  
+    // --- Init Achievements UI ---
+    document.getElementById('achievementsToggle')?.addEventListener('click', (e)=>{ e.preventDefault(); toggleAchievements(); }, {passive:true});
+    // Initial paint
+    renderBadges(); updatePointsUI(); checkBadgesUnlock();
+
+    // Modal wiring
+    (function(){
+      const modal = document.getElementById('achievements');
+      if(!modal) return;
+      modal.addEventListener('click', (e)=>{
+        if(e.target?.dataset?.close === 'true' || e.target === modal.querySelector('.modal__backdrop')){
+          toggleAchievements();
+        }
+      }, {passive:true});
+
+      document.addEventListener('keydown', (e)=>{
+        if(!modal.classList.contains('open')) return;
+        if(e.key === 'Escape'){
+          e.preventDefault();
+          toggleAchievements();
+        }
+      });
+    })();
+</script>
 </body>
 </html>
