@@ -199,10 +199,10 @@
       background: var(--card, #0e1310);
       color: var(--ink, #f5ffe8);
       display:flex; flex-direction:column;
-      overflow:hidden;
+      overflow:hidden; padding-top: env(safe-area-inset-top);
       box-shadow: var(--shadow, 0 10px 26px rgba(0,0,0,.3));
     }
-    .modal__header{ padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.08); }
+    .modal__header{ padding: max(12px, env(safe-area-inset-top)) 14px 12px; border-bottom:1px solid rgba(255,255,255,.08); }
     .modal__content{
       padding:12px;
       overflow:auto;
@@ -487,6 +487,21 @@
         grid.appendChild(li);
       });
     }
+
+    // === Hidden points reset: single tap on Points pill with confirm ===
+    (function attachHiddenPointsReset(){
+      const pill = document.getElementById('pointsPill');
+      if(!pill) return;
+      pill.addEventListener('click', ()=>{
+        const sure = window.confirm('Reset your points back to 0? Your badges will stay unlocked.');
+        if(!sure) return;
+        points = 0;
+        pointsStore.write(0);
+        updatePointsUI();
+        // Badges remain as-is (once earned, always kept)
+        showToast && showToast('Points reset to 0');
+      });
+    })();
 
     
     function toggleAchievements(){
